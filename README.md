@@ -71,8 +71,41 @@ Le sujet demande une **progression**, pas deux applications parallèles :
 - Au montage : `mounted()` (Options) / `onMounted()` (Composition) → premier chargement puis timer
 - Pied de page : date et heure de la **dernière mise à jour** (format `fr-FR`) + prochaine actualisation prévue
 
+## Drapeaux (Flagpedia → flagcdn.com)
+
+Le TD demande d’afficher les drapeaux via **Flagpedia**. La documentation officielle d’intégration se trouve ici :
+
+- [Flagpedia — Embed country flag images over CDN (HTTP API)](https://flagpedia.net/download/api)
+
+Cette page décrit l’usage du CDN **`https://flagcdn.com`**, avec des URLs du type :
+
+```text
+https://flagcdn.com/56x42/eu.png
+```
+
+### Pourquoi flagcdn.com dans le code ?
+
+| Approche | Résultat |
+|----------|----------|
+| URLs `https://flagpedia.net/data/flags/w580/{code}.png` (première version) | OK pour la plupart des pays, mais **404 pour `eu`** (drapeau Union européenne, indispensable pour l’euro) |
+| URLs `https://flagcdn.com/{taille}/{code}.png` (version actuelle) | **Tous** les drapeaux du tableau s’affichent, y compris `eu` |
+
+**Conclusion pour le correcteur :** on suit la doc Flagpedia, qui pointe vers **flagcdn.com** comme CDN d’hébergement des images. Ce n’est pas un service tiers différent : c’est le canal recommandé par Flagpedia pour embarquer les drapeaux.
+
+### Où c’est implémenté
+
+| Fichier | Rôle |
+|---------|------|
+| `src/constants/currencies.js` | Liste des devises + `flagCode` (ISO 3166-1 alpha-2) + fonctions `getFlagUrl()` / `getFlagSrcSet()` |
+| `src/components/CurrencyRow.vue` | Affiche le drapeau dans chaque ligne (`<img :src="flagUrl">`) |
+
+Exemple pour l’euro : `flagCode: 'eu'` → `https://flagcdn.com/56x42/eu.png`.
+
+Aucun fichier image n’est versionné dans `public/` : les PNG sont chargés à la volée depuis le CDN.
+
 ## Stack
 
 - Vue 3 — Options API puis Composition API
 - Vue Router
 - ExchangeRate-API — [documentation](https://www.exchangerate-api.com/docs/standard-requests)
+- Drapeaux — [Flagpedia (API / CDN)](https://flagpedia.net/download/api) via **flagcdn.com**

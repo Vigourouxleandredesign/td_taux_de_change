@@ -1,14 +1,27 @@
 <script setup>
+/**
+ * Une ligne du panneau : drapeau + libellés + montant.
+ *
+ * Le drapeau est chargé depuis flagcdn.com (CDN officiel documenté par Flagpedia).
+ * Voir src/constants/currencies.js pour le détail (getFlagUrl / getFlagSrcSet).
+ */
 import { computed } from 'vue'
-import { BASE_CURRENCY, getFlagUrl, getFlagSrcSet } from '@/constants/currencies'
+import {
+  BASE_CURRENCY,
+  AMOUNT_DECIMALS,
+  formatAmountDisplay,
+  getFlagUrl,
+  getFlagSrcSet
+} from '@/constants/currencies'
 
 const props = defineProps({
   currency: {
     type: Object,
     required: true
   },
-  amount: {
-    type: [Number, String],
+  /** Montant numérique (non formaté) */
+  modelValue: {
+    type: Number,
     default: null
   },
   index: {
@@ -21,6 +34,9 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['update:modelValue'])
+
+// flagCode vient de CURRENCIES (ex. "eu" pour EUR) → URL construite via Flagpedia/flagcdn
 const flagUrl = computed(() => getFlagUrl(props.currency.flagCode))
 const flagSrcSet = computed(() => getFlagSrcSet(props.currency.flagCode))
 
@@ -30,14 +46,34 @@ const isBaseCurrency = computed(
   () => props.currency.code === BASE_CURRENCY
 )
 
+const isEditable = computed(() => !isBaseCurrency.value)
+
 const amountLabel = computed(() =>
   isBaseCurrency.value ? 'Montant saisi' : 'Montant reçu'
 )
+
+const inputStep = computed(() => {
+  const step = 10 ** -AMOUNT_DECIMALS
+  return String(step)
+})
+
+const formattedAmount = computed(() => formatAmountDisplay(props.modelValue))
+
+function onAmountInput (event) {
+  const raw = event.target.value
+  if (raw === '' || raw == null) {
+    emit('update:modelValue', 0)
+    return
+  }
+  const value = Number(raw)
+  emit('update:modelValue', Number.isNaN(value) ? 0 : value)
+}
 </script>
 
 <template>
   <article
     class="currency-row"
+    :class="{ 'currency-row--editable': isEditable }"
     :style="{ animationDelay }"
   >
     <img
@@ -55,11 +91,22 @@ const amountLabel = computed(() =>
     </div>
     <div
       class="amount-block"
-      :aria-label="`${amountLabel} : ${amount ?? '…'} ${currency.code}`"
+      :aria-label="`${amountLabel} : ${formattedAmount ?? '…'} ${currency.code}`"
     >
       <span class="amount-label">{{ amountLabel }}</span>
-      <div v-if="!loading && amount != null" class="amount-value">
-        <span class="amount">{{ amount }}</span>
+      <div v-if="!loading && modelValue != null" class="amount-value">
+        <input
+          v-if="isEditable"
+          type="number"
+          class="amount-input"
+          :value="modelValue"
+          min="0"
+          :step="inputStep"
+          inputmode="decimal"
+          :aria-label="`Montant en ${currency.code}`"
+          @input="onAmountInput"
+        >
+        <span v-else class="amount">{{ formattedAmount }}</span>
         <span class="code">{{ currency.code }}</span>
       </div>
       <div v-else-if="loading" class="amount-value skeleton">
@@ -92,6 +139,11 @@ const amountLabel = computed(() =>
     row-enter 0.55s ease both,
     row-shimmer 8s ease-in-out infinite;
   overflow: hidden;
+}
+
+.currency-row--editable:focus-within {
+  outline: 1px solid rgba(160, 210, 255, 0.55);
+  outline-offset: 1px;
 }
 
 .flag {
@@ -171,7 +223,8 @@ const amountLabel = computed(() =>
   opacity: 0.45;
 }
 
-.amount {
+.amount,
+.amount-input {
   font-size: clamp(0.85rem, 3.2vw, 1.05rem);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -179,6 +232,38 @@ const amountLabel = computed(() =>
   font-variant-numeric: tabular-nums;
   text-align: right;
   line-height: 1.15;
+}
+
+.amount-input {
+  width: clamp(4.5rem, 22vw, 7rem);
+  max-width: 100%;
+  padding: 0.1rem 0.35rem;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: text;
+}
+
+.amount-input:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.amount-input:focus {
+  outline: none;
+  border-color: rgba(160, 210, 255, 0.9);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.amount-input::-webkit-outer-spin-button,
+.amount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.amount-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .code {
@@ -192,7 +277,6 @@ const amountLabel = computed(() =>
   border-radius: 2px;
 }
 
-/* Très petit écran : montant sous le libellé */
 @media (max-width: 380px) {
   .currency-row {
     flex-wrap: wrap;
@@ -217,6 +301,12 @@ const amountLabel = computed(() =>
     justify-content: space-between;
   }
 
+  .amount-input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
   .names .name-en,
   .names .name-fr {
     white-space: normal;
@@ -226,7 +316,6 @@ const amountLabel = computed(() =>
   }
 }
 
-/* Paysage large (ex. 1920×1080) */
 @media (min-width: 1200px) and (max-height: 1100px) {
   .currency-row {
     --row-pad-x: 2.5rem;
@@ -261,8 +350,13 @@ const amountLabel = computed(() =>
     font-size: 0.62rem;
   }
 
-  .amount {
+  .amount,
+  .amount-input {
     font-size: 1.15rem;
+  }
+
+  .amount-input {
+    width: 8rem;
   }
 
   .code {
@@ -271,7 +365,6 @@ const amountLabel = computed(() =>
   }
 }
 
-/* Écrans hauts portrait (ex. 1080×1920) */
 @media (max-width: 1080px) and (min-height: 1500px) {
   .currency-row {
     --row-pad-x: 1.15rem;
@@ -306,7 +399,8 @@ const amountLabel = computed(() =>
     font-size: 0.62rem;
   }
 
-  .amount {
+  .amount,
+  .amount-input {
     font-size: 1.1rem;
   }
 

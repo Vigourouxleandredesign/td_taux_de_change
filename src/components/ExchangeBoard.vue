@@ -7,7 +7,10 @@ import {
 import {
   BASE_CURRENCY,
   CURRENCIES,
-  convertFromXpf
+  convertFromXpf,
+  convertToXpf,
+  formatAmountDisplay,
+  roundAmount
 } from '@/constants/currencies'
 import CurrencyRow from '@/components/CurrencyRow.vue'
 
@@ -34,11 +37,7 @@ const xpfAmount = ref(1000)
 
 const formattedLastUpdate = computed(() => formatLastUpdate(lastUpdate.value))
 
-const formattedXpf = computed(() => {
-  const value = Number(xpfAmount.value)
-  if (!value || Number.isNaN(value)) return '0'
-  return value.toLocaleString('fr-FR', { maximumFractionDigits: 0 })
-})
+const formattedXpf = computed(() => formatAmountDisplay(xpfAmount.value) ?? '0,000')
 
 const formattedNextRefresh = computed(() => {
   if (!nextRefreshAt.value) return null
@@ -59,19 +58,16 @@ const rightCurrencies = computed(() =>
   CURRENCIES.filter((c) => c.column === 'right')
 )
 
-function formatAmount (code, raw) {
-  if (raw == null) return null
-  const opts =
-    code === 'JPY' || code === 'VUV' || code === 'XPF'
-      ? { maximumFractionDigits: 0 }
-      : { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-  return Number(raw).toLocaleString('fr-FR', opts)
+function getRawAmount (code) {
+  if (loading.value || !Object.keys(rates.value).length) return null
+  return convertFromXpf(xpfAmount.value, code, rates.value)
 }
 
-function getDisplayAmount (code) {
-  if (loading.value || !Object.keys(rates.value).length) return null
-  const raw = convertFromXpf(xpfAmount.value, code, rates.value)
-  return formatAmount(code, raw)
+function onForeignAmountChange (code, foreignAmount) {
+  if (code === BASE_CURRENCY) return
+  const xpf = convertToXpf(foreignAmount, code, rates.value)
+  if (xpf == null) return
+  xpfAmount.value = roundAmount(xpf) ?? 0
 }
 
 function rowIndex (column, index) {
@@ -94,7 +90,7 @@ function rowIndex (column, index) {
             v-model.number="xpfAmount"
             type="number"
             min="0"
-            step="1"
+            step="0.001"
             inputmode="decimal"
             class="xpf-input"
             :disabled="loading"
@@ -102,7 +98,7 @@ function rowIndex (column, index) {
           <span class="xpf-suffix">{{ BASE_CURRENCY }}</span>
         </div>
         <p class="xpf-hint">
-          Saisissez le montant en {{ BASE_CURRENCY }} que le client souhaite changer.
+          Saisissez un montant en {{ BASE_CURRENCY }} ou modifiez un montant reçu dans le tableau pour recalculer en franc pacifique.
         </p>
       </div>
 
@@ -118,7 +114,7 @@ function rowIndex (column, index) {
       <p class="board-legend">
         Pour
         <strong>{{ formattedXpf }} {{ BASE_CURRENCY }}</strong>,
-        voici le montant que vous recevriez dans chaque devise&nbsp;:
+        voici le montant que vous recevriez dans chaque devise (cliquez une valeur pour la modifier)&nbsp;:
       </p>
 
       <div class="board-columns">
@@ -131,9 +127,10 @@ function rowIndex (column, index) {
             v-for="(currency, i) in leftCurrencies"
             :key="currency.code"
             :currency="currency"
-            :amount="getDisplayAmount(currency.code)"
-            :index="rowIndex('left', i)"
+            :model-value="getRawAmount(currency.code)"
             :loading="loading"
+            :index="rowIndex('left', i)"
+            @update:model-value="onForeignAmountChange(currency.code, $event)"
           />
         </div>
         <div class="column">
@@ -145,9 +142,10 @@ function rowIndex (column, index) {
             v-for="(currency, i) in rightCurrencies"
             :key="currency.code"
             :currency="currency"
-            :amount="getDisplayAmount(currency.code)"
-            :index="rowIndex('right', i)"
+            :model-value="getRawAmount(currency.code)"
             :loading="loading"
+            :index="rowIndex('right', i)"
+            @update:model-value="onForeignAmountChange(currency.code, $event)"
           />
         </div>
       </div>
