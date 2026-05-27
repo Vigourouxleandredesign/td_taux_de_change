@@ -87,6 +87,9 @@
       <p v-if="dataSource === 'local'" class="dev-badge">
         Données locales (JSON) — mode développement, pas d'appel API
       </p>
+      <p v-else-if="dataSource === 'proxy'" class="dev-badge dev-badge--proxy">
+        Taux via proxy Netlify (clé API non exposée, cache serveur 1 h)
+      </p>
     </footer>
   </div>
 </template>

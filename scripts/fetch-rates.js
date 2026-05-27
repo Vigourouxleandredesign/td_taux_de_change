@@ -11,19 +11,25 @@ const OUTPUT_PATH = path.join(__dirname, '..', 'public', 'data', 'latest-xpf.jso
 
 function loadApiKey () {
   if (!fs.existsSync(ENV_PATH)) {
-    console.error('Fichier .env introuvable. Ajoutez VUE_APP_EXCHANGE_RATE_API_KEY.')
+    console.error('Fichier .env introuvable. Ajoutez EXCHANGE_RATE_API_KEY (ou VUE_APP_EXCHANGE_RATE_API_KEY).')
     process.exit(1)
   }
 
   const content = fs.readFileSync(ENV_PATH, 'utf8')
-  const match = content.match(/^\s*VUE_APP_EXCHANGE_RATE_API_KEY\s*=\s*(.+)\s*$/m)
+  const patterns = [
+    /^\s*EXCHANGE_RATE_API_KEY\s*=\s*(.+)\s*$/m,
+    /^\s*VUE_APP_EXCHANGE_RATE_API_KEY\s*=\s*(.+)\s*$/m
+  ]
 
-  if (!match || !match[1].trim()) {
-    console.error('VUE_APP_EXCHANGE_RATE_API_KEY est vide dans .env')
-    process.exit(1)
+  for (const pattern of patterns) {
+    const match = content.match(pattern)
+    if (match && match[1].trim()) {
+      return match[1].trim()
+    }
   }
 
-  return match[1].trim()
+  console.error('EXCHANGE_RATE_API_KEY (ou VUE_APP_EXCHANGE_RATE_API_KEY) est vide dans .env')
+  process.exit(1)
 }
 
 function fetchRates (apiKey) {

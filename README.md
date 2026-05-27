@@ -8,10 +8,10 @@ Application Vue.js affichant les taux de conversion entre le **franc pacifique (
 npm install
 ```
 
-Copiez `.env.example` vers `.env` et ajoutez votre clé API :
+Copiez `.env.example` vers `.env` et ajoutez votre clé API (usage local uniquement) :
 
 ```
-VUE_APP_EXCHANGE_RATE_API_KEY=votre_cle
+EXCHANGE_RATE_API_KEY=votre_cle
 ```
 
 ## Développement (JSON local — recommandé)
@@ -40,10 +40,27 @@ Puis redémarrer `npm run serve`.
 
 ## Production (Netlify)
 
-Le build de production utilise **l’API live** automatiquement. Configurez `VUE_APP_EXCHANGE_RATE_API_KEY` dans les variables d’environnement Netlify.
+Le build de production appelle **`/.netlify/functions/rates`** : la clé reste **côté serveur** (jamais dans le navigateur). La function met en cache la réponse **1 heure** pour limiter les appels API.
+
+### Variables d’environnement Netlify
+
+| Variable | Valeur |
+|----------|--------|
+| `EXCHANGE_RATE_API_KEY` | votre clé API (sans préfixe `VUE_APP_`) |
+
+Ne **pas** définir `VUE_APP_EXCHANGE_RATE_API_KEY` sur Netlify : elle serait injectée dans le bundle client.
+
+### Paramètres de déploiement
 
 - **Build command :** `npm run build`
 - **Publish directory :** `dist`
+- **Functions :** dossier `netlify/functions/` (détecté automatiquement)
+- **SPA :** `public/_redirects` → `/* /index.html 200`
+
+### Quota API
+
+- Frontend : `setInterval` **3 600 000 ms** (1 h) par onglet ouvert
+- Serveur (function) : cache **1 h** → au plus ~1 appel réel/heure vers ExchangeRate-API par instance serveur, même si plusieurs visiteurs
 
 ## Scripts
 
