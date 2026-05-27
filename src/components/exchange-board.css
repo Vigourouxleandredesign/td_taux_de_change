@@ -234,15 +234,6 @@
 .last-update,
 .auto-refresh,
 .auto-refresh-hint,
-.dev-badge {
-  margin: 0.2rem 0;
-  font-size: clamp(0.65rem, 2vw, 0.72rem);
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.03em;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
 .auto-refresh-hint {
   color: rgba(255, 255, 255, 0.4);
   font-size: clamp(0.6rem, 1.8vw, 0.68rem);
@@ -440,13 +431,11 @@
     padding-top: 1rem;
   }
 
-  .last-update,
-  .dev-badge {
+  .last-update {
     font-size: 0.78rem;
   }
 }
 
-/* Écrans hauts portrait (ex. 1080×1920) — espacement vertical ~2× */
 @media (max-width: 1080px) and (min-height: 1500px) {
   .board {
     padding: 2rem 1.25rem 2.5rem;
@@ -517,8 +506,7 @@
     padding-top: 1.25rem;
   }
 
-  .last-update,
-  .dev-badge {
+  .last-update {
     margin: 0.45rem 0;
     font-size: 0.8rem;
     line-height: 1.5;

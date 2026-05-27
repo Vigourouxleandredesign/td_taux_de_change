@@ -20,12 +20,10 @@ const {
   error,
   lastUpdate,
   nextRefreshAt,
-  dataSource,
   startAutoRefresh,
   stopAutoRefresh
 } = useExchangeRates()
 
-// Montage : premier chargement + setInterval toutes les 3 600 000 ms (1 h)
 onMounted(() => {
   startAutoRefresh()
 })
@@ -160,12 +158,6 @@ function rowIndex (column, index) {
       </p>
       <p class="auto-refresh-hint">
         Les taux sont actualisés automatiquement toutes les heures.
-      </p>
-      <p v-if="dataSource === 'local'" class="dev-badge">
-        Données locales (JSON) — mode développement, pas d'appel API
-      </p>
-      <p v-else-if="dataSource === 'proxy'" class="dev-badge dev-badge--proxy">
-        Taux via proxy Netlify (clé API non exposée, cache serveur 1 h)
       </p>
     </footer>
   </div>

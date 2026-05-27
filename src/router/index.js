@@ -1,19 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeViewOptions from '@/views/HomeViewOptions.vue'
 import HomeView from '@/views/HomeView.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'etape-options',
-    component: HomeViewOptions,
-    meta: { step: 1 }
+    name: 'home',
+    component: HomeView
   },
   {
     path: '/composition',
-    name: 'etape-composition',
-    component: HomeView,
-    meta: { step: 2 }
+    redirect: '/'
   }
 ]
 

@@ -84,18 +84,12 @@
       <p class="auto-refresh-hint">
         Les taux sont actualisés automatiquement toutes les heures.
       </p>
-      <p v-if="dataSource === 'local'" class="dev-badge">
-        Données locales (JSON) — mode développement, pas d'appel API
-      </p>
-      <p v-else-if="dataSource === 'proxy'" class="dev-badge dev-badge--proxy">
-        Taux via proxy Netlify (clé API non exposée, cache serveur 1 h)
-      </p>
     </footer>
   </div>
 </template>
 
 <script>
-import { fetchLatestRates, getRatesDataSource } from '@/services/exchangeRateApi'
+import { fetchLatestRates } from '@/services/exchangeRateApi'
 import {
   BASE_CURRENCY,
   CURRENCIES,
@@ -125,7 +119,6 @@ export default {
       error: null,
       lastUpdate: null,
       nextRefreshAt: null,
-      dataSource: getRatesDataSource(),
       refreshIntervalId: null
     }
   },
@@ -154,7 +147,6 @@ export default {
     }
   },
   mounted () {
-    // Premier appel API au montage, puis setInterval toutes les 3 600 000 ms
     this.startAutoRefresh()
   },
   beforeUnmount () {
@@ -168,7 +160,6 @@ export default {
       this.loading = true
       this.error = null
       try {
-        this.dataSource = getRatesDataSource()
         const data = await fetchLatestRates(BASE_CURRENCY)
         this.rates = pickCurrencyRates(data.conversion_rates)
         this.lastUpdate = data.time_last_update_utc ?? null
@@ -184,10 +175,7 @@ export default {
     startAutoRefresh () {
       this.stopAutoRefresh()
       this.loadRates()
-      this.refreshIntervalId = setInterval(
-        this.loadRates,
-        REFRESH_INTERVAL_MS // 3 600 000 ms = 1 heure
-      )
+      this.refreshIntervalId = setInterval(this.loadRates, REFRESH_INTERVAL_MS)
     },
     stopAutoRefresh () {
       if (this.refreshIntervalId != null) {

@@ -1,10 +1,4 @@
 <script setup>
-/**
- * Une ligne du panneau : drapeau + libellés + montant.
- *
- * Le drapeau est chargé depuis flagcdn.com (CDN officiel documenté par Flagpedia).
- * Voir src/constants/currencies.js pour le détail (getFlagUrl / getFlagSrcSet).
- */
 import { computed } from 'vue'
 import {
   BASE_CURRENCY,
@@ -19,7 +13,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  /** Montant numérique (non formaté) */
   modelValue: {
     type: Number,
     default: null
@@ -36,7 +29,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-// flagCode vient de CURRENCIES (ex. "eu" pour EUR) → URL construite via Flagpedia/flagcdn
 const flagUrl = computed(() => getFlagUrl(props.currency.flagCode))
 const flagSrcSet = computed(() => getFlagSrcSet(props.currency.flagCode))
 

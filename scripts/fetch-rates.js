@@ -1,7 +1,3 @@
-/**
- * Télécharge les taux XPF depuis l'API et met à jour public/data/latest-xpf.json
- * Usage : npm run fetch:rates
- */
 const fs = require('fs')
 const path = require('path')
 const https = require('https')

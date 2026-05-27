@@ -1,8 +1,4 @@
-/**
- * Proxy serveur ExchangeRate-API — la clé reste côté Netlify (EXCHANGE_RATE_API_KEY).
- * Cache en mémoire 1 h pour limiter les appels au quota gratuit (1 500 / mois).
- */
-const CACHE_TTL_MS = 3600000 // 1 heure (consigne TD)
+const CACHE_TTL_MS = 3_600_000
 
 /** @type {{ base: string, data: object, expiresAt: number } | null} */
 let cache = null
@@ -17,8 +13,7 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         result: 'error',
-        'error-type': 'missing-key',
-        message: 'EXCHANGE_RATE_API_KEY manquante sur Netlify.'
+        'error-type': 'missing-key'
       })
     }
   }
@@ -50,11 +45,7 @@ exports.handler = async (event) => {
       }
     }
 
-    cache = {
-      base,
-      data,
-      expiresAt: now + CACHE_TTL_MS
-    }
+    cache = { base, data, expiresAt: now + CACHE_TTL_MS }
 
     return {
       statusCode: 200,
