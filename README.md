@@ -41,6 +41,15 @@ Déploiement Netlify :
 
 Les taux en production passent par `/.netlify/functions/rates` (clé API côté serveur, cache 1 h).
 
+## Routes
+
+| URL | API Vue | Composant |
+|-----|---------|-----------|
+| `/` | Composition API (`ref`, `computed`, `onMounted`) | `ExchangeBoard.vue` |
+| `/options-api` | Options API (`data`, `computed`, `mounted`) | `ExchangeBoardOptions.vue` |
+
+La version publique principale est `/`. La route `/options-api` conserve la première implémentation pour comparaison.
+
 ## Scripts
 
 | Commande | Description |
@@ -51,7 +60,7 @@ Les taux en production passent par `/.netlify/functions/rates` (clé API côté 
 
 ## Stack
 
-- Vue 3 (Composition API)
+- Vue 3 — Composition API (production) et Options API (`/options-api`)
 - Vue Router
 - ExchangeRate-API
 - Drapeaux via [flagcdn.com](https://flagcdn.com)
